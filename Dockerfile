@@ -12,8 +12,8 @@ COPY . .
 # ビルド
 RUN npm run build
 
-# ポート3000を公開
-EXPOSE 3000
+# ポート8080を公開（Cloud Runのデフォルト）
+EXPOSE 8080
 
 # サーバーを起動
 CMD ["npm", "start"]

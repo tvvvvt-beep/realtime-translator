@@ -32,6 +32,12 @@ export function useRealtime() {
         data = JSON.parse(event.data);
       }
 
+      // エラー処理
+      if (data.type === "error") {
+        setError(data.error || "接続エラーが発生しました");
+        return;
+      }
+
       // テキスト応答を処理
       if (data.type === "conversation.item.created") {
         if (data.item?.content?.[0]?.text) {

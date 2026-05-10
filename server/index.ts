@@ -9,6 +9,11 @@ const __dirname = path.dirname(__filename);
 
 const API_KEY = process.env.OPENAI_API_KEY || "";
 
+if (!API_KEY) {
+  console.error("ERROR: OPENAI_API_KEY environment variable is not set!");
+  process.exit(1);
+}
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -72,10 +77,17 @@ async function startServer() {
     // エラー処理
     openaiWs.on("error", (err) => {
       console.error("OpenAI WebSocket error:", err);
+      clientWs.send(
+        JSON.stringify({
+          type: "error",
+          error: "Failed to connect to OpenAI API. Please check API key."
+        })
+      );
+      clientWs.close();
     });
 
-    openaiWs.on("close", () => {
-      console.log("OpenAI connection closed");
+    openaiWs.on("close", (code, reason) => {
+      console.log("OpenAI connection closed:", code, reason.toString());
       clientWs.close();
     });
 

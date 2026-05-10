@@ -21,8 +21,16 @@ export function useRealtime() {
       setError(null);
     };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    ws.onmessage = async (event) => {
+      let data;
+
+      // Blobの場合はテキストに変換
+      if (event.data instanceof Blob) {
+        const text = await event.data.text();
+        data = JSON.parse(text);
+      } else {
+        data = JSON.parse(event.data);
+      }
 
       // テキスト応答を処理
       if (data.type === "conversation.item.created") {
@@ -34,6 +42,15 @@ export function useRealtime() {
       // トランスクリプションを処理
       if (data.type === "conversation.item.input_audio_transcription.completed") {
         console.log("Transcription:", data.transcript);
+      }
+
+      // 応答テキストを処理
+      if (data.type === "response.text.delta") {
+        setTranslatedText((prev) => prev + data.delta);
+      }
+
+      if (data.type === "response.text.done") {
+        console.log("Translation:", data.text);
       }
     };
 

@@ -79,8 +79,12 @@ export function useRealtime() {
 
   // 録音開始・停止
   const toggleRecording = useCallback(async () => {
+    console.log("toggleRecording called, isConnected:", isConnected, "wsRef:", !!wsRef.current);
+
     if (!wsRef.current || !isConnected) {
-      setError("接続されていません");
+      const errorMsg = "接続されていません。WebSocket接続を待ってください。";
+      console.error(errorMsg);
+      setError(errorMsg);
       return;
     }
 

@@ -41,30 +41,41 @@ async function startServer() {
   wss.on("connection", (clientWs) => {
     console.log("Client connected");
 
-    // OpenAI Realtime APIに接続
-    const wsUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`;
+    // OpenAI Realtime Translation APIに接続
+    const wsUrl = `wss://api.openai.com/v1/realtime/translations?model=gpt-realtime-translate`;
     console.log("Connecting to OpenAI:", wsUrl);
-    console.log("Using subprotocol:", `bearer.${cleanedApiKey.slice(0, 10)}...`);
 
     const openaiWs = new WebSocket(
       wsUrl,
-      ["realtime", `bearer.${cleanedApiKey}`]
+      {
+        headers: {
+          "Authorization": `Bearer ${cleanedApiKey}`,
+          "OpenAI-Safety-Identifier": "user-" + Date.now(),
+        },
+      }
     );
 
     openaiWs.on("open", () => {
       console.log("Connected to OpenAI");
 
-      // セッション設定
+      // セッション設定 (Translation API専用)
       const sessionConfig = {
         type: "session.update",
         session: {
           modalities: ["text", "audio"],
           instructions: "You are a real-time translator. Translate Korean speech to Japanese text.",
           voice: "alloy",
-          input_audio_format: "pcm16",
-          output_audio_format: "pcm16",
-          input_audio_transcription: {
-            model: "whisper-1",
+          input: {
+            audio: {
+              format: "pcm16",
+            },
+            language: "ko", // 入力言語: 韓国語
+          },
+          output: {
+            audio: {
+              format: "pcm16",
+            },
+            language: "ja", // 出力言語: 日本語
           },
         },
       };

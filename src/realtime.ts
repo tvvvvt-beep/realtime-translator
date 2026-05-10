@@ -41,25 +41,26 @@ export function useRealtime() {
         return;
       }
 
-      // テキスト応答を処理
-      if (data.type === "conversation.item.created") {
-        if (data.item?.content?.[0]?.text) {
-          setTranslatedText(data.item.content[0].text);
-        }
+      // Translation API専用イベント
+
+      // 入力トランスクリプト（韓国語）のデルタ
+      if (data.type === "session.input_transcript.delta") {
+        console.log("Input transcript delta:", data.delta);
       }
 
-      // トランスクリプションを処理
-      if (data.type === "conversation.item.input_audio_transcription.completed") {
-        console.log("Transcription:", data.transcript);
+      // 入力トランスクリプト完了
+      if (data.type === "session.input_transcript.done") {
+        console.log("Input transcript complete:", data.transcript);
       }
 
-      // 応答テキストを処理
-      if (data.type === "response.text.delta") {
+      // 出力トランスクリプト（日本語訳）のデルタ
+      if (data.type === "session.output_transcript.delta") {
         setTranslatedText((prev) => prev + data.delta);
       }
 
-      if (data.type === "response.text.done") {
-        console.log("Translation:", data.text);
+      // 出力トランスクリプト完了
+      if (data.type === "session.output_transcript.done") {
+        console.log("Translation complete:", data.transcript);
       }
     };
 

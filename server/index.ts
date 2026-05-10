@@ -64,7 +64,6 @@ async function startServer() {
       const sessionConfig = {
         type: "session.update",
         session: {
-          modalities: ["text", "audio"],
           instructions: "You are a real-time translator. Translate Korean speech to Japanese text.",
           voice: "alloy",
           input: {

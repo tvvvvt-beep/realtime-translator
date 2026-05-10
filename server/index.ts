@@ -64,19 +64,14 @@ async function startServer() {
       const sessionConfig = {
         type: "session.update",
         session: {
-          instructions: "You are a real-time translator. Translate Korean speech to Japanese text.",
-          voice: "alloy",
-          input: {
-            audio: {
-              format: "pcm16",
+          audio: {
+            input: {
+              transcription: { model: "gpt-realtime-whisper" },
+              noise_reduction: { type: "near_field" },
             },
-            language: "ko", // 入力言語: 韓国語
-          },
-          output: {
-            audio: {
-              format: "pcm16",
+            output: {
+              language: "ja", // 出力言語: 日本語
             },
-            language: "ja", // 出力言語: 日本語
           },
         },
       };

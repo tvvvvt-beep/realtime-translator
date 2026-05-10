@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# キャッシュ無効化用の引数
+ARG CACHEBUST=1
+
 WORKDIR /app
 
 # 依存関係をコピー

@@ -14,9 +14,13 @@ if (!API_KEY) {
   process.exit(1);
 }
 
+// 前後の空白を削除
+const cleanedApiKey = API_KEY.trim();
+
 // デバッグ: APIキーの先頭部分をログ出力（セキュリティのため完全なキーは表示しない）
-console.log("API_KEY loaded:", API_KEY ? `${API_KEY.slice(0, 7)}...${API_KEY.slice(-4)}` : "EMPTY");
-console.log("API_KEY length:", API_KEY.length);
+console.log("API_KEY loaded:", cleanedApiKey ? `${cleanedApiKey.slice(0, 7)}...${cleanedApiKey.slice(-4)}` : "EMPTY");
+console.log("API_KEY length:", cleanedApiKey.length);
+console.log("API_KEY starts with 'sk-proj-'?:", cleanedApiKey.startsWith("sk-proj-"));
 
 async function startServer() {
   const app = express();
@@ -39,11 +43,12 @@ async function startServer() {
 
     // OpenAI Realtime APIに接続
     const wsUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`;
-    console.log("Connecting to OpenAI:", wsUrl.replace(API_KEY, "sk-..."));
+    console.log("Connecting to OpenAI:", wsUrl);
+    console.log("Using subprotocol:", `bearer.${cleanedApiKey.slice(0, 10)}...`);
 
     const openaiWs = new WebSocket(
       wsUrl,
-      ["realtime", `bearer.${API_KEY}`]
+      ["realtime", `bearer.${cleanedApiKey}`]
     );
 
     openaiWs.on("open", () => {

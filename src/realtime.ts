@@ -34,7 +34,10 @@ export function useRealtime() {
 
       // エラー処理
       if (data.type === "error") {
-        setError(data.error || "接続エラーが発生しました");
+        const errorMessage = typeof data.error === 'string'
+          ? data.error
+          : data.error?.message || "接続エラーが発生しました";
+        setError(errorMessage);
         return;
       }
 

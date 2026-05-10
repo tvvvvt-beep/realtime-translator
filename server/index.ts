@@ -9,13 +9,15 @@ const __dirname = path.dirname(__filename);
 
 const API_KEY = process.env.OPENAI_API_KEY || "";
 
-if (!API_KEY) {
-  console.error("ERROR: OPENAI_API_KEY environment variable is not set!");
-  process.exit(1);
-}
-
 // 前後の空白を削除
 const cleanedApiKey = API_KEY.trim();
+
+// APIキーのチェックは接続時に行う（サーバー起動を継続する）
+if (!cleanedApiKey) {
+  console.warn("WARNING: OPENAI_API_KEY environment variable is not set!");
+  console.warn("The server will start but translation will not work.");
+  console.warn("Set OPENAI_API_KEY environment variable to enable translation.");
+}
 
 // デバッグ: APIキーの先頭部分をログ出力（セキュリティのため完全なキーは表示しない）
 console.log("API_KEY loaded:", cleanedApiKey ? `${cleanedApiKey.slice(0, 7)}...${cleanedApiKey.slice(-4)}` : "EMPTY");

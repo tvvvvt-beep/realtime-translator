@@ -14,6 +14,10 @@ if (!API_KEY) {
   process.exit(1);
 }
 
+// デバッグ: APIキーの先頭部分をログ出力（セキュリティのため完全なキーは表示しない）
+console.log("API_KEY loaded:", API_KEY ? `${API_KEY.slice(0, 7)}...${API_KEY.slice(-4)}` : "EMPTY");
+console.log("API_KEY length:", API_KEY.length);
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -34,8 +38,11 @@ async function startServer() {
     console.log("Client connected");
 
     // OpenAI Realtime APIに接続
+    const wsUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`;
+    console.log("Connecting to OpenAI:", wsUrl.replace(API_KEY, "sk-..."));
+
     const openaiWs = new WebSocket(
-      "wss://api.openai.com/v1/realtime?model=gpt-realtime-translate",
+      wsUrl,
       ["realtime", `bearer.${API_KEY}`]
     );
 
@@ -43,21 +50,21 @@ async function startServer() {
       console.log("Connected to OpenAI");
 
       // セッション設定
-      openaiWs.send(
-        JSON.stringify({
-          type: "session.update",
-          session: {
-            modalities: ["text", "audio"],
-            instructions: "You are a real-time translator. Translate Korean speech to Japanese text.",
-            voice: "alloy",
-            input_audio_format: "pcm16",
-            output_audio_format: "pcm16",
-            input_audio_transcription: {
-              model: "whisper-1",
-            },
+      const sessionConfig = {
+        type: "session.update",
+        session: {
+          modalities: ["text", "audio"],
+          instructions: "You are a real-time translator. Translate Korean speech to Japanese text.",
+          voice: "alloy",
+          input_audio_format: "pcm16",
+          output_audio_format: "pcm16",
+          input_audio_transcription: {
+            model: "whisper-1",
           },
-        })
-      );
+        },
+      };
+      console.log("Sending session config:", JSON.stringify(sessionConfig, null, 2));
+      openaiWs.send(JSON.stringify(sessionConfig));
     });
 
     // クライアント → OpenAI
@@ -67,23 +74,32 @@ async function startServer() {
       }
     });
 
-    // OpenAI → クライアント
-    openaiWs.on("message", (data) => {
-      if (clientWs.readyState === WebSocket.OPEN) {
-        clientWs.send(data);
-      }
-    });
-
     // エラー処理
     openaiWs.on("error", (err) => {
       console.error("OpenAI WebSocket error:", err);
-      clientWs.send(
-        JSON.stringify({
-          type: "error",
-          error: "Failed to connect to OpenAI API. Please check API key."
-        })
-      );
+      const errorResponse = {
+        type: "error",
+        error: {
+          message: `Failed to connect to OpenAI API: ${err.message || "Unknown error"}. Please check API key.`
+        }
+      };
+      clientWs.send(JSON.stringify(errorResponse));
       clientWs.close();
+    });
+
+    // OpenAI → クライアント（エラーメッセージをログに出力）
+    openaiWs.on("message", (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        if (message.type === "error") {
+          console.error("OpenAI API error:", message.error);
+        }
+      } catch (e) {
+        // JSON parse error, just forward as-is
+      }
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.send(data);
+      }
     });
 
     openaiWs.on("close", (code, reason) => {

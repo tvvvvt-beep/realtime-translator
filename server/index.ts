@@ -97,10 +97,14 @@ async function startServer() {
       try {
         const message = JSON.parse(data.toString());
         if (message.type === "error") {
-          console.error("OpenAI API error:", message.error);
+          console.error("OpenAI API error type:", message.error?.type);
+          console.error("OpenAI API error code:", message.error?.code);
+          console.error("OpenAI API error message:", message.error?.message);
+          console.error("OpenAI API error param:", message.error?.param);
         }
       } catch (e) {
         // JSON parse error, just forward as-is
+        console.log("Non-JSON message from OpenAI");
       }
       if (clientWs.readyState === WebSocket.OPEN) {
         clientWs.send(data);
@@ -121,6 +125,10 @@ async function startServer() {
   const port = process.env.PORT || 3000;
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    console.log("Environment check:");
+    console.log(`- PORT: ${process.env.PORT || "default (3000)"}`);
+    console.log(`- OPENAI_API_KEY set: ${!!process.env.OPENAI_API_KEY}`);
+    console.log(`- Node version: ${process.version}`);
   });
 }
 
